@@ -228,10 +228,10 @@ bool operator<(const Result<I, S> &lhs, const Result<I,S> &rhs) {
 
 template<class I, class S>
 ostream& operator<<(ostream& out, const Result<I, S> &r) {
-    // write 1-based ID indices to output
-    for (const auto &id : r.getID()) {
-        out << (id+1) << "\t";
-    }
+//    // write 1-based ID indices to output
+//    for (const auto &id : r.getID()) {
+//        out << (id+1) << "\t";
+//    }
 
     // copy score fields to output
     // cannot use copy here because it also prints a trailing delimiter

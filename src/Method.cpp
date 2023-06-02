@@ -45,8 +45,8 @@ static const array<Method::MethodDescription, Method::TYPE_MAX> methods {{
     { Method::Type::INVALID, 0, 0, 0, "invalid", "(invalid)"},
 }};
 
-static const string SNPIDHEADER_2WAY = "SNPID A\tSNPID B\tIDX A\tIDX B";
-static const string SNPIDHEADER_3WAY = "SNPID A\tSNPID B\tSNPID C\tIDX A\tIDX B\tIDX C";
+static const string SNPIDHEADER_2WAY = "POS A\tPOS B\tSNPID A\tSNPID B";
+static const string SNPIDHEADER_3WAY = "POS A\tPOS B\tPOS C\tSNPID A\tSNPID B\tSNPID C";
 
 // TODO make compatible for multiple methods
 static const array<string, Method::TYPE_MAX> SCOREHEADERS {

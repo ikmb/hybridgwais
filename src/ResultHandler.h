@@ -335,6 +335,11 @@ private:
 
             auto &r = it->getMax();
 
+            // print SNP positions
+			for(unsigned id = 0; id < r.getID().size(); id++) {
+				const SNPDB::SNPInfo &info = snpdb.getSNPInfo(r.getID(id));
+				results << info.chromosome << ":" << info.pos_bp << "\t";
+			}
             // print SNP names
             for(unsigned id = 0; id < r.getID().size(); id++) {
 				results << snpdb.getSNPInfo(r.getID(id)).variant_id << "\t";
