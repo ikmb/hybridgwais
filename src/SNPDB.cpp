@@ -139,20 +139,22 @@ void SNPDB::applyRegions() {
 
     // create union of all sets to determine required sets
     auto unit = unite(sets);
-    // swipe through sets to generate the flag vector
-    ignored_snps.clear();
-    ignored_snps.reserve(num_snps_global);
-    size_t curr = 0;
-    num_snps_local = 0;
+
 //    // DEBUG
 //    cout << "\nUnited: " << endl;
 //    for (const auto &u : unit)
 //    	cout << " " << printSNPRange(u) << endl;
 //    // __DEBUG
+
+    // swipe through sets to generate the flag vector
+    ignored_snps.clear();
+    ignored_snps.reserve(num_snps_global);
+    size_t curr = 0;
+    num_snps_local = 0;
     for (const auto &u : unit) {
         num_snps_local += u.second - u.first;
         if (u.first - curr > 0)
-            ignored_snps.insert(ignored_snps.end(), u.first, true); // interval before current range is ignored
+            ignored_snps.insert(ignored_snps.end(), u.first - curr, true); // interval before current range is ignored
         ignored_snps.insert(ignored_snps.end(), u.second-u.first, false); // don't ignore specified range
         curr = u.second;
     }
