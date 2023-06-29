@@ -475,7 +475,7 @@ vector<shared_ptr<FPGAHandler::Block>> FPGAHandler::initDistribution(const snpra
 			block->buffercount[i] = buffer_count;
 			totalbuffers += buffer_count;
 			block->residualresults[i] = resultsPerChannel[i] % tablesPerBuffer;
-			if (block->residualresults[i] == 0ull)
+			if (block->residualresults[i] == 0ull && block->buffercount[i] > 0ull)
 				block->residualresults[i] = tablesPerBuffer;
 		}
 
@@ -496,7 +496,7 @@ vector<shared_ptr<FPGAHandler::Block>> FPGAHandler::initDistribution(const snpra
 			cout << " swapped:      " << (block.swapped ? "yes" : "no") << endl;
 			cout << " expected tables per chain:" << endl;
 			for(unsigned i = 0; i < fpgaconf.getNumChains(); i++) {
-				size_t resultsperchannel = (block.buffercount[i]-1)*tablesPerBuffer + block.residualresults[i];
+				size_t resultsperchannel = block.buffercount[i] > 0 ? (block.buffercount[i]-1)*tablesPerBuffer + block.residualresults[i] : 0;
 				cout << "  DMA channel " << (i+1) << ": " << resultsperchannel << " tables, ";
 				cout << block.buffercount[i] << " buffers, ";
 				cout << si_binary(block.buffercount[i] * bufferFactory.getBufferSize());
