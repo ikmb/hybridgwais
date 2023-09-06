@@ -28,7 +28,7 @@ GPUIDCreator::GPUIDCreator(hybridsys::BufferFactory<hybridsys::FPGABuffer> &fact
     currptr = NULL;
     items_in_buffer = 0;
     size_t fpgatablesize = order == 2 ? GPUIDCreator::GPUONLY_IDSIZE_2WAY : GPUIDCreator::GPUONLY_IDSIZE_3WAY;
-    tables_per_buffer = bufferFactory.getBufferSize() / fpgatablesize;
+    items_per_buffer = bufferFactory.getBufferSize() / fpgatablesize;
     outqueue_ptr = NULL;
     isfinished = false;
 }
@@ -79,12 +79,12 @@ void GPUIDCreator::processTriple(size_t snpA, size_t snpB, size_t snpC) {
 }
 
 void GPUIDCreator::checkBuffer() {
-    if (items_in_buffer == tables_per_buffer) {
+    if (items_in_buffer == items_per_buffer) {
         // buffer is full -> send and get a new one
-        b->setContentLength(tables_per_buffer);
+        b->setContentLength(items_per_buffer);
         outqueue_ptr->push(b); // send
         if (debug) {
-            cout << "Sent full buffer. " << tables_per_buffer << endl;
+            cout << "Sent full buffer. " << items_per_buffer << endl;
         }
         b = bufferFactory.get(); // wait for a new one
         items_in_buffer = 0;

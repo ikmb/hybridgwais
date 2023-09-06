@@ -71,7 +71,7 @@ private:
     shared_ptr<hybridsys::FPGABuffer> b; // current buffer
     unsigned *currptr;
     size_t items_in_buffer;
-    size_t tables_per_buffer;
+    size_t items_per_buffer;
 
     tbb::concurrent_bounded_queue<shared_ptr<hybridsys::FPGABuffer>>* outqueue_ptr;
 
