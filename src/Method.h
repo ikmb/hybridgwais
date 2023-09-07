@@ -50,12 +50,14 @@ public:
         Method::Type type;              ///< Type ID, see Method::Type
         unsigned order;                 ///< Order of interaction (also: number of ID fields in result set)
         unsigned numScoreFields;        ///< Number of score fields in result set
-        unsigned numScoreComponents;    ///< Number of *additional* score fields when decomposed results are requested
-        const char *shortName;          ///< A short identifier used for command-line args parsing and file extensions
-        const char *descriptiveName;    ///< A description of the method in use, for help output
+        unsigned numAddScoreFields;     ///< Number of *additional* score fields when decomposed results are requested
+        const char* shortName;          ///< A short identifier used for command-line args parsing and file extensions
+        const char* descriptiveName;    ///< A description of the method in use, for help output
+        const char** scoreFieldNames;   ///< Names (identifier) of each score field
+        const char** addScoreFieldNames;///< Additional score field names for decomposed results.
     };
 
-    static const int maxScoreComponents = 12; // including LD fields!
+    static const int maxScoreComponents = 100; // must be greater than the real maximum number of components
 
     static const array<MethodDescription, TYPE_MAX>& getMethods();
 
@@ -64,8 +66,10 @@ public:
     unsigned getOrder() const;
     unsigned getScoreFields() const;
     static unsigned getScoreFields(const vector<Method> &methods);
-    const char *getShortName() const;
-    const char *getDescription() const;
+    const char* getShortName() const;
+    const char* getDescription() const;
+    vector<const char*> getScoreFieldNames() const;
+    const char* getScoreFieldName(unsigned scorefield) const;
     Type getType() const { return type; }
 
     void setDetails(bool details_) { details = details_; }

@@ -69,7 +69,6 @@ public:
     using score_type = S;
     using iterator = ResultIterator<I,S>;
     using difference_type = ptrdiff_t;
-    using size_type = size_t;
 
     const size_t alignment = max(alignment_of<id_type>::value, alignment_of<score_type>::value);
 
@@ -183,13 +182,13 @@ public:
 		if (index < id.size())
 			return id[index];
 		else
-			throw out_of_range("Result definition does not have that much ID fields");
+			throw out_of_range("Result definition does not have that much ID fields.");
 	}
     const score_type &getScore(size_t index) const {
     	if (index < score.size())
     		return score[index];
     	else
-			throw out_of_range("Result definition does not have that much score fields");
+			throw out_of_range("Result definition does not have that much score fields.");
     }
     void replaceID(size_t index, id_type id_) {
         if (index < id.size())
