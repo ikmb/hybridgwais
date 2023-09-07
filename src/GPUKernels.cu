@@ -74,7 +74,7 @@ __host__ void copyConstantsToDevice(
         bool gpuonly) {
 
         Method::Type mts[Method::Type::TYPE_MAX];
-        for (int mi = 0; mi < methods.size(); mi++) {
+        for (size_t mi = 0; mi < methods.size(); mi++) {
             mts[mi] = methods[mi].getType();
         }
         checkCUDAError(cudaMemcpyToSymbol(devMethods, &mts, sizeof(devMethods), 0, cudaMemcpyHostToDevice))
