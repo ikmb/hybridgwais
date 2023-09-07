@@ -57,6 +57,7 @@ public:
           bestResults(bestResults_),
           methods(methods_),
           order(methods_[0].getOrder()),
+		  snpindex(args.snpindex),
           debug(args.debug)
     {
         useThreshold = !isnan(threshold);
@@ -295,6 +296,7 @@ private:
     bool useLDFilter;
     bool useResults;
 
+    bool snpindex;
     bool debug;
 
     void flushResults(const string &cmdline) {
@@ -320,7 +322,7 @@ private:
         results << "#" << cmdline << endl;
 
         // print header
-        Method::printHeader(methods, results);
+        Method::printHeader(methods, snpindex, results);
 
         // collect <actual_results> top elements from all our heaps
         unsigned long actual_results = 0;
@@ -344,9 +346,14 @@ private:
             for(unsigned id = 0; id < r.getID().size(); id++) {
 				results << snpdb.getSNPInfo(r.getID(id)).variant_id << "\t";
 			}
-//            // DEBUG
-//            if (r.getID(0) == 210458 && r.getID(1) == 566505)
-//                cout << "SNP pair has been written to file." << endl;
+
+            // print SNP indices (if desired)
+			if (snpindex) {
+				for(unsigned id = 0; id < r.getID().size(); id++) {
+					results << r.getID(id)+1 << "\t"; // print 1-based index
+				}
+			}
+
             // print rest
             results << it->popMax();
             actual_results++;

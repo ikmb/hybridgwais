@@ -71,7 +71,7 @@ public:
     void setDetails(bool details_) { details = details_; }
     bool isDetailedComputation() const { return details; }
 
-    static void printHeader(const vector<Method> &methods, ostream &out);
+    static void printHeader(const vector<Method> &methods, bool snpindex, ostream &out);
 
 private:
     Type type;

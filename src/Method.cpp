@@ -47,6 +47,8 @@ static const array<Method::MethodDescription, Method::TYPE_MAX> methods {{
 
 static const string SNPIDHEADER_2WAY = "POS A\tPOS B\tSNPID A\tSNPID B";
 static const string SNPIDHEADER_3WAY = "POS A\tPOS B\tPOS C\tSNPID A\tSNPID B\tSNPID C";
+static const string SNPINDEXHEADER_2WAY = "\tIDX A\tIDX B";
+static const string SNPINDEXHEADER_3WAY = "\tIDX A\tIDX B\tIDX C";
 
 // TODO make compatible for multiple methods
 static const array<string, Method::TYPE_MAX> SCOREHEADERS {
@@ -106,11 +108,16 @@ const char *Method::getDescription() const {
     return methods[type].descriptiveName;
 }
 
-/*static*/ void Method::printHeader(const vector<Method> &methods_, ostream &out) {
-    if (methods_[0].getOrder() == 2)
+/*static*/ void Method::printHeader(const vector<Method> &methods_, bool snpindex, ostream &out) {
+    if (methods_[0].getOrder() == 2) {
         out << SNPIDHEADER_2WAY;
-    else
+        if (snpindex)
+        	out << SNPINDEXHEADER_2WAY;
+	} else {
         out << SNPIDHEADER_3WAY;
+        if (snpindex)
+        	out << SNPINDEXHEADER_3WAY;
+	}
     for (const auto &m : methods_) {
         out << SCOREHEADERS[m.type];
         if (m.details)

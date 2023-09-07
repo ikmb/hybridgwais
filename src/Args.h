@@ -102,6 +102,7 @@ public:
 
     bool debug = false;
     bool yaml = false;
+    bool snpindex = false;
 
     size_t buffersize;
     unsigned nbuffersFPGA;

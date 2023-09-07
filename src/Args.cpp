@@ -63,14 +63,17 @@ Args Args::parseArgs(int argc, char *argv[]) {
     }
 
     if(!(args.count("snpfile") || (args.count("bim") && args.count("bed") && args.count("fam")))) {
-        args.printHelp(argv[0], cout);
         StatusFile::addError("You need to specify an input file basename OR individual file names with --{bim,bed,fam}. You may not specify both or neither.");
         exit(EXIT_FAILURE);
     }
 
     if(!args.count("method")) {
-        args.printHelp(argv[0], cout);
         StatusFile::addError("Missing required option --method/-m");
+        exit(EXIT_FAILURE);
+    }
+
+    if(!args.count("stat") && args.count("yaml")) {
+        StatusFile::addError("You need to specify a status file base with --stat if you want YAML messages.");
         exit(EXIT_FAILURE);
     }
 
@@ -180,6 +183,7 @@ Args::Args(int argc, char *argv[]) :
     ("debug", "produce lots of debug output")
     ("snpfile", value<string>(&snpfilebase), "SNP input file (filename base for .bim/.bed/.fam (automatic parameter for positional argument #1)")
     ("yaml", "produce info/warning/error files in YAML format")
+	("snpindex", "put SNP indices in result file")
 	;
 
 #ifdef USE_CUDA_GPU
@@ -197,8 +201,6 @@ Args::Args(int argc, char *argv[]) :
     ;
 #endif
 #endif
-
-    assert(Method::maxScoreComponents == 12); // this is the maximum number of score components for all currently available methods
 
     opts_positional.add("snpfile", 1);
 
@@ -229,6 +231,8 @@ void Args::parseVars() {
         debug = true;
     if (vars.count("yaml"))
         yaml = true;
+    if (vars.count("snpindex"))
+        snpindex = true;
 
     if (!statfile.empty()) {
         bool ok = true;
