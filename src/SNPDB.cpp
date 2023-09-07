@@ -85,8 +85,8 @@ void SNPDB::initialize(size_t word_size_) {
     applyRegions();
 
     // apply padding to actual case/control counts
-    num_cases_padded = roundToMultiple(max(num_cases, min_cases), 16ul);
-    num_controls_padded = roundToMultiple(max(num_controls, min_controls), 16ul);
+    num_cases_padded = increaseToMultipleInt(max(num_cases, min_cases), 16ul);
+    num_controls_padded = increaseToMultipleInt(max(num_controls, min_controls), 16ul);
 
     // count bytes required for cases and controls (4gts per byte)
     case_size = num_cases_padded / 4;
@@ -146,11 +146,12 @@ void SNPDB::applyRegions() {
 //    	cout << " " << printSNPRange(u) << endl;
 //    // __DEBUG
 
-    // swipe through sets to generate the flag vector
+    // swipe through sets to generate the ignored flags
     ignored_snps.clear();
     ignored_snps.reserve(num_snps_global);
     size_t curr = 0;
     num_snps_local = 0;
+
     for (const auto &u : unit) {
         num_snps_local += u.second - u.first;
         if (u.first - curr > 0)
@@ -176,7 +177,7 @@ void SNPDB::applyRegions() {
     sort(sets); // sets are now ordered and empties removed
 
     if (debug) {
-		cout << "Sorted sets:" << endl;
+		cout << "\nSorted sets:" << endl;
 		for (const auto &s : sets)
 			cout << " " << printSNPRange(s) << endl;
     }
@@ -502,6 +503,7 @@ snprange SNPDB::parseSetRange(const string &rset_arg) {
         }
 
     }
+
     return range;
 }
 

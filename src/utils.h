@@ -53,22 +53,44 @@ string si_binary(T num, unsigned max_int_bits = 1) {
     return ss.str();
 }
 
-template<typename T>
-inline T roundToMultiple(T n, T mult) {
-    if (n % mult)
-        return n + mult - (n % mult);
-    else
-        return n;
+inline int64_t increaseToMultipleInt(int64_t n, int64_t mult) {
+	if (n < 0)
+		return -(-n - ((-n) % mult));
+	if (n % mult)
+		return n + abs(mult) - (n % mult);
+	else
+		return n;
 }
 
-template<typename T>
-inline T reduceToMultiple(T n, T mult) {
-    return n - (n % mult);
+inline double increaseToMultipleDouble(double n, double mult) {
+	if (n < 0)
+		return -(-n - fmod(-n, mult));
+	if (fmod(n, mult) > 0 || fmod(n, mult) < 0)
+		return n + abs(mult) - fmod(n, mult);
+	else
+		return n;
 }
 
-template<typename T>
-inline T divideRounded(T a, T b) {
-    return (a + b - 1) / b;
+inline int64_t reduceToMultipleInt(int64_t n, int64_t mult) {
+	if (n < 0)
+		return -(-n + abs(mult) - ((-n) % mult));
+	else
+		return n - (n % mult);
+}
+
+inline double reduceToMultipleDouble(double n, double mult) {
+	if (n < 0)
+		return -(-n + abs(mult) - fmod(-n, mult));
+	else
+		return n - fmod(n, mult);
+}
+
+
+inline int64_t divideRounded(int64_t a, int64_t b) {
+	if (a < 0)
+		return -(-a + abs(b) - 1) / b;
+	else
+		return (a + abs(b) - 1) / b;
 }
 
 #endif // UTILS_H

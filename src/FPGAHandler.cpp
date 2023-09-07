@@ -376,7 +376,7 @@ vector<shared_ptr<FPGAHandler::Block>> FPGAHandler::initDistribution(const snpra
 			size_t num_ovp = divideRounded(ovsize, maxsnps/2);
 			size_t ovpsize = ovsize / num_ovp; // note that the remainder ovsize % num_ovp must not be forgotten!
 			// the size of a non-ov part (after init_last) must not exceed the size of an ov part, implicating the number of non-ov parts
-			size_t num_novp = max((size_t)1, divideRounded(novsize, ovpsize)); // corner case: we need at least one block, even if it's of size 0.
+			size_t num_novp = max(1l, divideRounded(novsize, ovpsize)); // corner case: we need at least one block, even if it's of size 0.
 			size_t novpsize = novsize / num_novp; // due to rounding, this might be slightly different to ovpsize. do not forget the remainder as well!
 
 //			// DEBUG
@@ -457,10 +457,10 @@ vector<shared_ptr<FPGAHandler::Block>> FPGAHandler::initDistribution(const snpra
 
 		unsigned chain;
 		size_t num_pes = fpgaconf.getNumPEPerChain() * fpgaconf.getNumChains();
-		for(size_t snp = 0; snp < min(roundToMultiple(block->init_last+1, num_pes), block->snpcount); snp++) { // FPGA computes blocks of num_pes SNPs in each round, so, also SNPs after init_last are computed
+		for(size_t snp = 0; snp < min((size_t)increaseToMultipleInt(block->init_last+1, num_pes), block->snpcount); snp++) { // FPGA computes blocks of num_pes SNPs in each round, so, also SNPs after init_last are computed
 			chain = (snp % num_pes) / fpgaconf.getNumPEPerChain(); // for two channels, this results in either 0 or 1 (indicating DMA channels 1 or 2 resp.)
 			resultsPerChannel[chain] += (block->snpcount - snp - 1);
-			size_t round_end = roundToMultiple(snp+1, num_pes); // exclusive
+			size_t round_end = increaseToMultipleInt(snp+1, num_pes); // exclusive
 			if (round_end < block->stream_start) // FPGA jumps over the gap between the last SNP in the round and the stream start
 				resultsPerChannel[chain] -= block->stream_start - round_end;
 			// calculate number of results after filtering
