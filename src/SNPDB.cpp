@@ -450,11 +450,11 @@ snprange SNPDB::parseSetRange(const string &rset_arg) {
         }
         if (!chrstr.empty()) { // provided chrN:x-y or chrN:x-chrM:y
             // find SNPs in DB
-            size_t bp = idx1;
-            findSNP(chrstr, bp, 0, idx1);
+            size_t bp1 = idx1;
+            findSNP(chrstr, bp1, 0, idx1);
             if (idx1 >= num_snps_global) { // chr not found or bp exceeds all SNPs
                 stringstream s;
-                s << "Chromosome " << chrstr << " not found or position " << bp << " exceeds available SNPs. Set is empty.";
+                s << "Chromosome " << chrstr << " not found or position " << bp1 << " exceeds available SNPs. Set is empty.";
                 StatusFile::addWarning(s.str());
                 // setting an empty range
                 range.first = num_snps_global;
@@ -465,8 +465,9 @@ snprange SNPDB::parseSetRange(const string &rset_arg) {
                     range.second = num_snps_global;
                 else { // parse next chromosome and index
                 	chrpos = rset.find(':',pos+1); // parse after dash
+                	string chrstr2(chrstr); // chromosome from second part of range (default equal to first)
                 	if (chrpos != string::npos) { // found a new chromosome string
-                		chrstr.assign(rset.substr(pos+1,chrpos-pos-1));
+                		chrstr2.assign(rset.substr(pos+1,chrpos-pos-1));
 						pos = chrpos;
                 	}
                 	// parse second bp
@@ -476,11 +477,40 @@ snprange SNPDB::parseSetRange(const string &rset_arg) {
 						StatusFile::addError("No valid range argument.");
 						exit(EXIT_FAILURE);
 					}
-                    bp = idx2;
-                    if (findSNP(chrstr, bp, idx1, idx2)) // found exactly
-                        range.second = idx2+1; // has to be exluding
-                    else
-                        range.second = idx2; // is excluding anyway
+                    size_t bp2 = idx2;
+                    if (chrstr.compare(chrstr2)) { // chromosomes are not equal
+                    	// search needs to start from the beginning if chromosomes are not equal
+                    	if (findSNP(chrstr2, bp2, 0, idx2)) {
+                    		// found exactly
+                    		range.second = idx2+1; // has to be excluding
+                    	} else { // not found exactly
+							if (idx2 >= num_snps_global) { // chr not found or bp exceeds all SNPs
+								stringstream s;
+								s << "Chromosome " << chrstr2 << " not found or position " << bp2 << " exceeds available SNPs. Range upper limit is set to the last available SNP.";
+								StatusFile::addWarning(s.str());
+								// setting an empty range
+								range.second = num_snps_global;
+							} else { // idx2 is next SNP
+								range.second = idx2;
+							}
+                    	}
+                    	// we need to have a valid range now, otherwise the user has provided an invalid range!
+                    	if (range.second < range.first) {
+                    		StatusFile::addError(string("No valid range: ") + chrstr + ":" + to_string(bp1) + "-" + chrstr2 + ":" + to_string(bp2) + ".");
+							exit(EXIT_FAILURE);
+                    	}
+                    } else { // equal chromosomes
+                    	// check if the range is valid
+                    	if (bp2 < bp1) {
+                    		StatusFile::addError(string("No valid range: ") + chrstr + ":" + to_string(bp1) + "-" + to_string(bp2) + ".");
+							exit(EXIT_FAILURE);
+                    	}
+						// search starts from idx1 if chromosomes are equal
+						if (findSNP(chrstr2, bp2, idx1, idx2)) // found exactly
+							range.second = idx2+1; // has to be exluding
+						else
+							range.second = idx2; // is excluding anyway
+                    }
                 }
             }
         } else { // provided index range
