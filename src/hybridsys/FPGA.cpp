@@ -138,7 +138,7 @@ void FPGA::lock() {
 
         int ret = write(lockfd, buf.str().c_str(), buf.str().length()); // write to lockfile
         if (ftr || ret <= 0)
-            cerr << "WARNING! Writing to lockfile failed with status " << ftr << "/" << err << "." << endl;
+            cerr << "WARNING! Writing to lockfile failed with status " << ftr << "/" << ret << "." << endl;
 
         // DON'T DO THAT! THIS WILL RELEASE THE LOCK!
         // close(fd);
