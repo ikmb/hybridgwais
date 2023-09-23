@@ -184,8 +184,10 @@ private:
     unsigned maxDMAChannels;
     vector<DMAChannelType> channelTypes;
 
+    string lockfile;
     bool locked;
     int lockfd;
+    bool lockfdwr;
 
 //    string getLockDirectory() const;
 //    string getLockFileName() const;

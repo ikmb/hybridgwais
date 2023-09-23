@@ -81,112 +81,68 @@ static const char *module_path = "/sys/bus/pci/drivers/adb3";
     return index;
 }
 
-///**
-// * @brief Wait for a lockfile to be deleted in a directory specified by the given inotify watch handle
-// * @param inotify_fd
-// * @param watch
-// * @param lockfile The plain lockfile name without path name
-// */
-//void FPGA::waitForLock(int inotify_fd, int watch, const string& lockfile) {
-//
-//    char buf[4096] __attribute__ ((aligned(__alignof__(struct inotify_event))));
-//    const struct inotify_event *event;
-//    ssize_t ret;
-//    bool file_deleted = false;
-//
-//    do {
-//        // Check whether there is one or more event waiting to be read. Block if necessary.
-//        ret = read(inotify_fd, buf, sizeof(buf));
-//        if(ret > 0) {
-//            char *bufptr;
-//
-//            // Check all queued events
-//            for(bufptr = buf; bufptr < (buf + ret); bufptr += sizeof(struct inotify_event) + event->len) {
-//                event = reinterpret_cast<struct inotify_event*>(buf);
-//
-//                if((event->mask & IN_DELETE) && event->wd == watch && strcmp(event->name, lockfile.c_str()) == 0) {
-//                    file_deleted = true;
-//                    break;
-//                }
-//            }
-//        }
-//        if(ret < 0)
-//            throw system_error(errno, system_category(), "Could not read from inotify watch descriptor");
-//    } while(!file_deleted);
-//}
-
 void FPGA::lock() {
 
-    string lockfile = lockdir + "/" + lockfileprefix + serial;
+    lockfile = lockdir + "/" + lockfileprefix + serial;
 
-    mode_t m = umask(0);
-    int fd = open(lockfile.c_str(), O_RDWR);
-    if (fd < 0) // error while trying to read from lockfile -> probably not existing? try to create it!
-        fd = open(lockfile.c_str(), O_RDWR | O_CREAT, 0666);
-    umask(m);
-    if(fd >= 0) {
+    while (!locked) {
+        lockfdwr = false;
+        mode_t m = umask(0); // read current file creation mask
+        int fd = open(lockfile.c_str(), O_RDWR | O_CREAT, 0666);
+        umask(m); // reset file creation mask to value before creating the lockfile
+        if(fd < 0) { // failed to get write access to lockfile
+            //cerr << "WARNING: Could not get write access to lockfile " << lockfile << ", but I may still be able to acquire a lock..." << endl;
+            fd = open(lockfile.c_str(), O_RDONLY); // try to get read access
+            if (fd < 0) // something clearly went wrong (no write access to lockfile dir?)
+                throw system_error(errno, system_category(), "Could not open lockfile " + lockfile);
+        } else
+            lockfdwr = true;
         flock(fd, LOCK_EX);
-    } else {
-        throw system_error(errno, system_category(), "Could not open lockfile " + lockfile);
+
+        struct stat st0;
+        fstat(fd, &st0);
+        if(st0.st_nlink == 0) { // the file was deleted by another process -> try again
+            //cerr << "WARNING: Lockfile was deleted. Try to create a new one." << endl;
+            close(fd);
+            continue;
+        }
+
+        locked = true;
+        lockfd = fd;
     }
 
-//    // Set up filesystem watch so we don't miss a lockfile release during check.
-//    // We cannot place a lock on a file that does not exist so we have to watch
-//    // the whole directory and filter all events by our lock file name.
-//    int inotify_fd = inotify_init();
-//
-//    // Not a real file descriptior, close() on the inotify_fd will clean this up.
-//    int watch = inotify_add_watch(inotify_fd, lockdir.c_str(), IN_DELETE);
-//
-//    // Open lockfile and create it, if possible
-//    int fd;
-//    do {
-//        fd = open(lockfile.c_str(), O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-//        if(fd >= 0) {
-//            break; // Okay, we got the lock.
-//        } else if(fd == -1 && errno == EEXIST) {
-//            // Lock was already taken, wait for it.
-//            waitForLock(inotify_fd, watch, getLockFileName());
-//        } else {
-//            close(inotify_fd);
-//            throw system_error(errno, system_category(), "Could not open lockfile " + lockfile);
-//        }
-//    } while(1);
-//    close(inotify_fd);
+    // Write some information to lockfile
+    if (lockfdwr) {
+        int ftr = ftruncate(lockfd, 0); // clear lockfile (don't care if this fails)
 
-    locked = true;
-    lockfd = fd;
+        stringstream buf;
+        time_t epoch = time(nullptr);
+        tm local = *localtime(&epoch);
+        buf << "Since: " << put_time(&local, "%c") << endl;
 
-    if(ftruncate(fd, 0) == -1)
-        throw system_error(errno, system_category(), "Could not write to lockfile " + lockfile);
+        auto uid = geteuid();
+        auto pw = getpwuid(uid);
+        buf << "By: " << pw->pw_name << " (" << pw->pw_gecos << ")" << endl;
 
-    // Write some informational file content
-    stringstream buf;
-    time_t epoch = time(nullptr);
-    tm local = *localtime(&epoch);
-    buf << "Since: " << put_time(&local, "%c") << endl;
+        buf << "Pid: " << getpid() << endl;
+        char *cmdline = new char[4096]; // arbitrary
+        int cmdline_fd = open("/proc/self/cmdline", O_RDONLY);
+        if(cmdline_fd != -1) {
+            cmdline[0] = 0;
+            cmdline[4095] = 0;
+            if(read(cmdline_fd, cmdline, 4096) == -1)
+                throw system_error(errno, system_category(), "Could not read process details from /proc/self");
+            buf << "Cmd: " << cmdline << endl;
+        }
+        delete[] cmdline;
 
-    auto uid = geteuid();
-    auto pw = getpwuid(uid);
-    buf << "By: " << pw->pw_name << " (" << pw->pw_gecos << ")" << endl;
+        int err = write(lockfd, buf.str().c_str(), buf.str().length()); // write to lockfile
+        if (ftr | err)
+            cerr << "WARNING! Writing to lockfile failed with status " << ftr << "/" << err << "." << endl;
 
-    buf << "Pid: " << getpid() << endl;
-    char *cmdline = new char[4096]; // arbitrary
-    int cmdline_fd = open("/proc/self/cmdline", O_RDONLY);
-    if(cmdline_fd != -1) {
-        cmdline[0] = 0;
-        cmdline[4095] = 0;
-        if(read(cmdline_fd, cmdline, 4096) == -1)
-            throw system_error(errno, system_category(), "Could not read process details from /proc/self");
-        buf << "Cmd: " << cmdline << endl;
+        // DON'T DO THAT! THIS WILL RELEASE THE LOCK!
+        // close(fd);
     }
-    delete[] cmdline;
-
-    if(write(fd, buf.str().c_str(), buf.str().length()) == -1)
-        throw system_error(errno, system_category(), "Could not write to lockfile " + lockfile);
-
-    // DON'T DO THAT! THIS WILL RELEASE THE LOCK!
-    // close(fd);
 
 #ifdef USE_AD_FPGA
     auto status = ADMXRC3_OpenEx(adIndex, false, 0, &masterHandle);
@@ -207,16 +163,20 @@ void FPGA::lock() {
 }
 
 void FPGA::unlock() {
-//    string lockfile = getLockDirectory() + "/" + getLockFileName();
-//    if(unlink(lockfile.c_str()) == -1)
-//        cerr << "Could not unlink lockfile " << lockfile << endl;
     if (locked) {
-        int ftr = ftruncate(lockfd, 0); // clear the contents of the lockfile
-        if (ftr != 0)
-            cerr << "WARNING! Release FPGA lock returned status " << ftr << "." << endl;
+        if (lockfdwr) {
+            int ftr = ftruncate(lockfd, 0); // clear the contents of the lockfile
+            if (ftr)
+                cerr << "WARNING! Clearing FPGA lock file returned status " << ftr << "." << endl;
+        }
+        // important to remove the lockfile only while I have the exclusive lock on it!!!
+        int unl = unlink(lockfile.c_str());
+        if (unl)
+            cerr << "WARNING! Failed to remove lock file." << endl;
         close(lockfd);
         lockfd = 0;
         locked = false;
+        lockfdwr = false;
     }
 }
 
