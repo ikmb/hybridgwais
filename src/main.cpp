@@ -456,13 +456,13 @@ int main(int argc, char *argv[]) {
     if (yaml) {
         stringstream istr;
         istr << "\n"
-                << "  SNPs:\n"
-				<< "    global: " << db.getGlobalSNPCount() << "\n"
-                << "    local:  " << db.getLocalSNPCount() << "\n"
-                << "  samples:\n"
-                << "    total:    " << db.getSampleCount() << "\n"
-                << "    cases:    " << db.getCaseCount() << "\n"
-                << "    controls: " << db.getControlCount() << "\n";
+                << "    SNPs:\n"
+				<< "      global: " << db.getGlobalSNPCount() << "\n"
+                << "      local:  " << db.getLocalSNPCount() << "\n"
+                << "    samples:\n"
+                << "      total:    " << db.getSampleCount() << "\n"
+                << "      cases:    " << db.getCaseCount() << "\n"
+                << "      controls: " << db.getControlCount() << "\n";
         StatusFile::addInfoYAML("General information", istr.str());
     }
 
@@ -521,7 +521,7 @@ int main(int argc, char *argv[]) {
             sstr << "\n"
                       << "    setA: ";
             if (usersetAg.first >= usersetAg.second)
-                sstr << "empty\n";
+                sstr << "null\n";
             else {
                 sstr << "\n"
                       << "      beginIdx: " << (usersetAg.first + 1) << "\n"
@@ -531,7 +531,7 @@ int main(int argc, char *argv[]) {
             }
             sstr << "    setB: ";
             if (usersetBg.first >= usersetBg.second)
-                sstr << "empty\n";
+                sstr << "null\n";
             else {
                 sstr << "\n"
                       << "      beginIdx: " << (usersetBg.first + 1) << "\n"
@@ -542,7 +542,7 @@ int main(int argc, char *argv[]) {
             if (order == 3) {
                 sstr << "    setC: ";
                 if (usersetCg.first >= usersetCg.second)
-                    sstr << "empty\n";
+                    sstr << "null\n";
                 else {
                     sstr << "\n"
                           << "      beginIdx: " << (usersetCg.first + 1) << "\n"
@@ -591,7 +591,7 @@ int main(int argc, char *argv[]) {
         sstr << "\n";
 		sstr << "    excludeset: ";
         if (userexsetg.first >= userexsetg.second)
-            sstr << "empty\n";
+            sstr << "null\n";
         else {
             sstr << "\n"
                  << "      beginIdx: " << (userexsetg.first + 1) << "\n"
