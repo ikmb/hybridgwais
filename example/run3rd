@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "Running 3rd order example:"
+../build/hybridgwais 3rdorder/3rdorder -m ig3 -n 100
