@@ -77,6 +77,8 @@ POS A   POS B   SNPID A SNPID B LOGR_CHISQ      LOGR_OR LOGR_P-VAL      LOGR_BET
 0:0     0:0     N1829   N2495   27.6975 2.24539 1.42134e-07     0.80888 0.153696
 ...
 ```
+The meanings of each column are explained in the [Results](#results) section below.
+
 If you want to run the tool directly without a script, you could simply call:
 ```bash
 ../build/hybridgwais 2ndorder/2ndorder -m logreg -n 100 --gpu 0
@@ -102,6 +104,8 @@ POS A   POS B   POS C   SNPID A SNPID B SNPID C IG
 0:0     0:0     0:0     N82     N300    N461    0.0309345
 0:0     0:0     0:0     N9      N21     N238    0.03081
 ```
+The meanings of each column are explained in the [Results](#results) section below.
+
 
 ## How to run *HybridGWAIS* with your data
 The simplest way to launch an analysis is to call the tool with your `.bed/.bim/.fam` input (provide only the base name without the file ending) and the statistic method(s) you want to use with the `-m` switch.
@@ -118,3 +122,51 @@ Note: Please add `hybridgwais` to your `PATH` variable if you want to call it wi
 ```bash
 export PATH=$PATH:/path/to/hybridgwais/build
 ```
+
+## Results
+The generated `scores`-files are always sorted by the score column of the first applied test.
+Per default, it contains the first 100,000 results. You can adjust this number with the `-n` switch.
+
+### Result columns
+
+Common columns:
+- `POS_A`: genetic position in the format *chr:bp* of variant A
+- `POS_B`: genetic position in the format *chr:bp* of variant B
+- `POS_C`: genetic position in the format *chr:bp* of variant C (optional)
+- `SNPID_A`: identifier string of variant A
+- `SNPID_B`: identifier string of variant B
+- `SNPID_C`: identifier string of variant C (optional)
+
+Logistic regression:
+- `LOGR_CHISQ`: chi-squared score
+- `LOGR_OR`: odds-ratio
+- `LOGR_P-VAL`: p-value of the chi-squared score assuming a chi-squared distribution with one degree of freedom
+- `LOGR_BETA`: beta_3 value after the last iteration
+- `LOGR_EPS`: standard error after the last iteration
+
+BOOST:
+- `BOOST_CHISQ`: chi-squared score of log-linear test applied after KSA-filtering
+- `BOOST_ERR`: standard error after the last iteration of the log-linear test after KSA-filtering
+- `BOOST_P-VAL`: p-value of the chi-squared score assuming a chi-squared distribution with four degrees of freedom
+
+Log-linear test:
+- `LL_CHISQ`: Chi-squared score
+- `LL_ERR`: standard error after the last iteration
+- `LL_P-VAL`: p-value of the chi-squared score assuming a chi-squared distribution with four degrees of freedom
+
+Mutual information:
+- `MI`: mutual information I(X_1,X_2;Y) or I(X_1,X_2,X_3;Y) respectively
+
+Information gain:
+- `IG`: information gain I(X_1;X_2;Y) or I(X_1;X_2;X_3;Y) respectively
+
+Linkage disequilibrium:
+
+Note that the equation to calculate r^2 allows up to three possible solutions, although in most cases they are all equal. For pairwise tests, we report the highest and the lowest solution:
+- `R2_H`: largest (highest) solution for r^2
+- `R2_L`: smallest (lowest) solution for r^2
+
+For third order tests we report all largest (highest) pairwise r^2 scores:
+- `R2_AB_H`: largest (highest) solution for r^2 for variant pair A and B
+- `R2_AC_H`: largest (highest) solution for r^2 for variant pair A and C
+- `R2_BC_H`: largest (highest) solution for r^2 for variant pair B and C
