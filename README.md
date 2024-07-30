@@ -72,9 +72,9 @@ The runtime is only a few seconds on a standard computer, but keep in my mind, t
 The examples create a `scores`-file located in this folder. The top results should look like this:
 ```
 POS A   POS B   SNPID A SNPID B LOGR_CHISQ      LOGR_OR LOGR_P-VAL      LOGR_BETA       LOGR_EPS
-0:0     0:0     M0P1    M0P2    159.536 693.048 1.47874e-36     6.5411  0.517871
-0:0     0:0     N1189   N3225   28.8503 2.96464 7.83682e-08     1.08676 0.202329
-0:0     0:0     N1829   N2495   27.6975 2.24539 1.42134e-07     0.80888 0.153696
+1:4999  1:5000  M0P1    M0P2    159.536 693.048 1.47874e-36     6.5411  0.517871
+1:1190  1:3226  N1189   N3225   28.8503 2.96464 7.83682e-08     1.08676 0.202329
+1:1830  1:2496  N1829   N2495   27.6975 2.24539 1.42134e-07     0.80888 0.153696
 ...
 ```
 The meanings of each column are explained in the [Results](#results) section below.
@@ -100,9 +100,10 @@ The runtime is only a few seconds on a standard computer, but keep in my mind, t
 The examples again create a `scores`-file located in this folder. The top results should look like this:
 ```
 POS A   POS B   POS C   SNPID A SNPID B SNPID C IG
-0:0     0:0     0:0     M0P3    M0P4    M0P5    0.0826113
-0:0     0:0     0:0     N82     N300    N461    0.0309345
-0:0     0:0     0:0     N9      N21     N238    0.03081
+1:498   1:499   1:500   M0P3    M0P4    M0P5    0.0826113
+1:83    1:301   1:462   N82     N300    N461    0.0309345
+1:10    1:22    1:239   N9      N21     N238    0.03081
+...
 ```
 The meanings of each column are explained in the [Results](#results) section below.
 
