@@ -20,6 +20,8 @@
 
 #include <array>
 #include <algorithm>
+#include <vector>
+
 #include "Method.h"
 
 using namespace std;
