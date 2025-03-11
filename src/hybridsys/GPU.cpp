@@ -20,6 +20,7 @@
 
 #include <iomanip>
 #include <sstream>
+#include <array>
 
 #ifdef USE_CUDA_GPU
 #include <cuda_runtime.h>
