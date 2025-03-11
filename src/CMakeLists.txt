@@ -79,30 +79,32 @@ configure_file(
 # NVIDIA
 option(GPU_SUPPORT "Use GPU Support if possible" ON)
 cmake_policy(SET CMP0077 NEW)
-set(CUDA_PROPAGATE_HOST_FLAGS OFF)
-#set(CUDA_TOOLKIT_ROOT_DIR "/opt/cuda")
-#set(CUDA_BIN_PATH "/opt/cuda/bin")
-set(GPU_DEPLOYMENT_KIT_ROOT_DIR "/usr/local/cuda")
-set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-Xcompiler;-Wall;-arch=sm_70;-gencode=arch=compute_60,code=sm_60;-gencode=arch=compute_70,code=sm_70;-gencode=arch=compute_80,code=sm_80;-gencode=arch=compute_86,code=sm_86")
-set(CUDA_NVCC_FLAGS_DEBUG "${CUDA_NVCC_FLAGS_DEBUG};-O0;-g;-G")
-set(CUDA_NVCC_FLAGS_RELEASE "-O3")
-set(CUDA_NVCC_FLAGS_RELWITHDEBINFO "${CUDA_NVCC_FLAGS_RELWITHDEBINFO};-O2;-g;-G")
 
-find_package(NVML) #optional!
-find_package(CUDA 11.0) #optional!
-set(CUDA_HOST_COMPILER "/usr/bin/gcc-11")
-if(NVML_FOUND AND CUDA_FOUND AND GPU_SUPPORT)
-    cuda_add_executable(${PROJECT_NAME} ${cpp_sources})
+if(GPU_SUPPORT)
+    set(CMAKE_CUDA_ARCHITECTURES "60;70;80;86;90")
+    set(CMAKE_CUDA_STANDARD 17)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+
+    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-Xcompiler;-Wall;-arch=sm_70;-gencode=arch=compute_60,code=sm_60;-gencode=arch=compute_70,code=sm_70;-gencode=arch=compute_80,code=sm_80;-gencode=arch=compute_86,code=sm_86")
+    set(CMAKE_CUDA_FLAGS_DEBUG "${CMAKE_CUDA_FLAGS_DEBUG} -O0 -g -G")
+    set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS_RELEASE} -O3")
+    set(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-O3 -lineinfo")
+
+    enable_language(CUDA)
+    find_package(CUDAToolkit REQUIRED)
+
+    include_directories("${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
+    add_executable(${PROJECT_NAME} ${cpp_sources} ${cuda_sources})
     target_compile_definitions(${PROJECT_NAME} PUBLIC USE_CUDA_GPU _FORCE_INLINES)
-    include_directories(${NVML_INCLUDE_DIR})
-    target_link_libraries(${PROJECT_NAME} ${NVML_LIBRARY})
-    message("Found CUDA ${CUDA_VERSION_STRING}. Enabling GPU support!")
+    target_link_libraries(${PROJECT_NAME} CUDA::nvml)
+
+    set_target_properties(${PROJECT_NAME} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+    set_target_properties(${PROJECT_NAME} PROPERTIES CUDA_PROPAGATE_HOST_FLAGS OFF)
 else()
     message("CUDA or NVML not found or deactivated. Compiling without GPU support!")
-    set_source_files_properties(GPUKernels.cu PROPERTIES LANGUAGE CXX)
-    set_source_files_properties(GPUEngine.cu PROPERTIES LANGUAGE CXX)
+    set_source_files_properties(${cuda_sources} PROPERTIES LANGUAGE CXX)
     add_definitions(-x c++)
-    add_executable(${PROJECT_NAME} ${cpp_sources})
+    add_executable(${PROJECT_NAME} ${cpp_sources} ${cuda_sources})
 endif()
 
 target_link_libraries(${PROJECT_NAME} rt)
@@ -192,5 +194,9 @@ set(OPT_SCORE_TYPE	double	CACHE STRING "Score precision (double or float)")
 target_compile_definitions(${PROJECT_NAME} PUBLIC SCORE_TYPE=${OPT_SCORE_TYPE})
 
 # additional CXX options
-set(CXX_WARNINGS "-Wall -Wextra -Wshadow -Wno-deprecated-declarations -Wmissing-include-dirs -Wstrict-aliasing=2 -Wfloat-equal -Wcast-align")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -ggdb")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -ggdb -DNDEBUG")
+
+set(CXX_WARNINGS "-Wall -Wextra -Wpedantic -Wshadow -Wno-deprecated-declarations -Wmissing-include-dirs -Wstrict-aliasing=2 -Wfloat-equal -Wcast-align")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_OPTIONS} ${cxx_compiler_opts} ${CXX_WARNINGS} -fopenmp -march=native")
